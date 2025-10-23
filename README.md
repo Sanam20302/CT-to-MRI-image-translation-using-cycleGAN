@@ -8,3 +8,5 @@ Key files:
 - CT-MRI.py : For training from epoch 0.
 - CT-MRI_resume.py : To resume training from where we left before.
 - training_metrics.csv : Metrics throughout and after completing 500 epochs.
+
+Currently working on it's UI.
