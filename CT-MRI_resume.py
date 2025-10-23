@@ -11,7 +11,6 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from PIL import Image
 from torchmetrics.image import StructuralSimilarityIndexMeasure
-# from skimage.metrics import structural_similarity as ssim
 import itertools
 import gc
 import sys
@@ -19,11 +18,10 @@ import traceback
 from datetime import datetime
 import random
 
-# ==========================
 # Logging and Utility Functions
-# ==========================
+
 def log_print(message, log_file='/output/training_log.txt'):
-    """Log to both console and file"""
+    #Log to both console and file
     print(message)
     sys.stdout.flush()
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -44,14 +42,13 @@ def psnr_loss_as_loss(img1, img2, max_val=1.0):
 
 def ssim_loss(img1, img2, metric):
     
-    img1_norm = (img1 + 1.0) / 2.0  # Convert to [0,1]
+    img1_norm = (img1 + 1.0) / 2.0  
     img2_norm = (img2 + 1.0) / 2.0
     ssim_val = metric(img1_norm, img2_norm)
     return 1 - ssim_val
 
-# ==========================
 # Image History Buffer
-# ==========================
+
 class ImageBuffer:
     def __init__(self, buffer_size=50, device='cpu'):
         self.buffer_size = buffer_size
@@ -79,9 +76,8 @@ class ImageBuffer:
                     to_return.append(image)
         return torch.cat(to_return, 0).to(self.device)
 
-# ==========================
 # Dataset
-# ==========================
+
 class cycleganDataset(Dataset):
     def __init__(self, trainA_path, trainB_path, transform=None):
         self.trainA_images = sorted([os.path.join(trainA_path, img) for img in os.listdir(trainA_path)])
@@ -99,9 +95,8 @@ class cycleganDataset(Dataset):
             img_B = self.transform(img_B)
         return img_A, img_B
 
-# ==========================
 # Network Architectures
-# ==========================
+
 class ResidualBlock(nn.Module):
     def __init__(self, channels):
         super(ResidualBlock, self).__init__()
@@ -174,9 +169,8 @@ class Discriminator(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# ==========================
 # Helper Functions
-# ==========================
+
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -202,7 +196,7 @@ def find_latest_checkpoint(save_dir):
     checkpoint_files = [f for f in os.listdir(save_dir) if f.endswith('.pth')]
     if not checkpoint_files:
         return None, 0
-    # Extract epoch numbers from filenames
+   
     epoch_numbers = []
     for f in checkpoint_files:
         if 'G_AB_epoch_' in f:
@@ -239,10 +233,8 @@ def save_checkpoint(model, optimizer, save_dir, model_name, epoch):
     checkpoint_path = os.path.join(save_dir, f'{model_name}_epoch_{epoch:04d}.pth')
     torch.save(checkpoint, checkpoint_path)
 
-
-# ==========================
 # Training Function (Modified)
-# ==========================
+
 def main():
     try:
         # Configuration Dictionary
@@ -258,8 +250,8 @@ def main():
             'batch_size': 4,
             'buffer_size': 50,
             'image_size': 256,
-            'trainA_path': 'DATASET/images/trainA', # CORRECTED PATH
-            'trainB_path': 'DATASET/images/trainB', # CORRECTED PATH
+            'trainA_path': 'DATASET/images/trainA', 
+            'trainB_path': 'DATASET/images/trainB', 
             'save_dir': 'output/checkpoints',
             'log_file': 'output/training_log.txt',
             'metrics_file': 'output/training_metrics.csv'
@@ -350,7 +342,6 @@ def main():
                 fake_B = G_AB(real_A)
 
                 # Train Discriminators
-                # ===================
                 opt_D_A.zero_grad()
                 fake_A_from_buffer = fake_A_buffer.push_and_pop(fake_A)
                 loss_D_A_real = criterion_gan(D_A(real_A), torch.ones_like(D_A(real_A)))
@@ -370,7 +361,6 @@ def main():
                 loss_D_total = loss_D_A + loss_D_B
 
                 # Train Generators
-                # ================
                 opt_G.zero_grad()
                 
                 # GAN Loss
@@ -424,7 +414,7 @@ def main():
                         denorm(real_B),
                         denorm(fake_A_sample),
                         denorm(rec_B_sample)
-                    ], dim=3)  # concatenate along width
+                    ], dim=3)  
 
                     save_path = f"output/saved_images/composite_epoch_{epoch}.png"
                     save_image(grid.cpu(), save_path)
@@ -456,7 +446,6 @@ def main():
             )
 
             if epoch % 50 == 0:
-                # Save checkpoints with optimizer states
                 save_checkpoint(G_AB, opt_G, config['save_dir'], 'G_AB', epoch)
                 save_checkpoint(G_BA, opt_G, config['save_dir'], 'G_BA', epoch)
                 save_checkpoint(D_A, opt_D_A, config['save_dir'], 'D_A', epoch)
@@ -472,4 +461,5 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
+
     main()
