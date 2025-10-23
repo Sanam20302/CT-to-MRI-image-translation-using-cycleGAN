@@ -7,4 +7,4 @@ attention and hyperparameter tuning. (PyTorch, Deep Learning)
 Key files:
 - CT-MRI.py : For training from epoch 0.
 - CT-MRI_resume.py : To resume training from where we left before.
-- Results : Results after completeing 500 epochs.
+- training_metrics.csv : Metrics throughout and after completing 500 epochs.
